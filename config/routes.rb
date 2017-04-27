@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  get 'oauth/index'
+
+  get 'oauth/callback'
+
   get 'api_requests/list'
 
   get 'api_requests/detail'
