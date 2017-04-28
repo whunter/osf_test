@@ -1,4 +1,12 @@
 Rails.application.routes.draw do
+  get 'oauth2/index'
+
+  get 'oauth2/auth'
+
+  get 'oauth2/token'
+
+  get 'oauth2/callback'
+
   get 'oauth/index'
 
   get 'oauth/callback'
