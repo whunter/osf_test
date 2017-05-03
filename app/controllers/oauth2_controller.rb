@@ -41,7 +41,7 @@ class Oauth2Controller < ApplicationController
       Rails.application.secrets['osf_client_id'],
       Rails.application.secrets['osf_client_secret'],
       :site => 'https://accounts.osf.io',
-      :authorize_url=>"/oauth2/authorize", 
+      :authorize_url=>"/oauth2/authorize",
       :token_url=>"/oauth2/token"
     )
   end
