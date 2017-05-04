@@ -20,14 +20,10 @@ class Oauth2Controller < ApplicationController
   def callback
     code = params['code']
     if !code.blank?
-      @token = @client.auth_code.get_token(code, :redirect_uri => callback_url)
-      if !@token.blank?
-	me = @token.get('https://api.osf.io/v2/users/me/')
-        me_obj = JSON.parse(me.body)
-        nodes_link = me_obj['data']['relationships']['nodes']['links']['related']['href']
-	nodes = @token.get(nodes_link)
-        nodes_obj = JSON.parse(nodes.body)
-	raise nodes_obj['data'].first.inspect
+      oauth_token = @client.auth_code.get_token(code, :redirect_uri => callback_url)
+      if !oauth_token.blank?
+        session['oauth_token'] = oauth_token
+        redirect_to api_list_url 
       end
     end
   end

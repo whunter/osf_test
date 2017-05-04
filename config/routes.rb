@@ -11,7 +11,7 @@ Rails.application.routes.draw do
 
   get 'oauth/callback'
 
-  get 'api_requests/list'
+  get 'api_requests/list', :as => :api_list
 
   get 'api_requests/detail'
 
