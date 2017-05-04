@@ -1,4 +1,5 @@
 class Oauth2Controller < ApplicationController
+  before_action :check_logged_in
   before_action :get_client
 
   def index
@@ -36,10 +37,14 @@ class Oauth2Controller < ApplicationController
     @client ||=  OAuth2::Client.new(
       Rails.application.secrets['osf_client_id'],
       Rails.application.secrets['osf_client_secret'],
-      :site => 'https://accounts.osf.io',
-      :authorize_url=>"/oauth2/authorize",
-      :token_url=>"/oauth2/token"
+      :site => Rails.application.config.osf_auth_site,
+      :authorize_url=> Rails.application.config.osf_authorize_url,
+      :token_url=> Rails.application.config.osf_token_url
     )
+  end
+
+  def check_logged_in
+    redirect_to oauth_auth_url unless session['oauth_token']
   end
 end
 

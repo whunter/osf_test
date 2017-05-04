@@ -1,0 +1,3 @@
+auth_site: "https://accounts.osf.io"
+authorize_url: "/oauth2/authorize"
+token_url: "/oauth2/token"

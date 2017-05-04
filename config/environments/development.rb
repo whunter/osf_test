@@ -51,4 +51,10 @@ Rails.application.configure do
   # Use an evented file watcher to asynchronously detect changes in source code,
   # routes, locales, etc. This feature depends on the listen gem.
   config.file_watcher = ActiveSupport::EventedFileUpdateChecker
+
+  # Load OSF auth config from yaml
+  osf_auth_config = Psych.load_file(File.join(Rails.root.to_s, 'config', 'osf_auth_config.yml'))
+  config.osf_auth_site = osf_auth_config["auth_site"]
+  config.osf_authorize_url = osf_auth_config["authorize_url"]
+  config.osf_token_url = osf_auth_config["token_url"]
 end

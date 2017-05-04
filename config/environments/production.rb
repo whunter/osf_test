@@ -83,4 +83,10 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
+
+  # Load OSF auth config from yaml
+  osf_auth_config = Psych.load_file(File.join(Rails.root.to_s, 'config', 'osf_auth_config.yml'))
+  config.osf_auth_site = osf_auth_config["auth_site"]
+  config.osf_authorize_url = osf_auth_config["authorize_url"]
+  config.osf_token_url = osf_auth_config["token_url"]
 end
