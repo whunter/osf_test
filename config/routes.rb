@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   get 'oauth2/index'
 
-  get 'oauth2/auth', :as => oauth_auth_url
+  get 'oauth2/auth', :as => :oauth_auth_url
 
   get 'oauth2/token'
 
@@ -13,7 +13,7 @@ Rails.application.routes.draw do
 
   get 'api_requests/list', :as => :api_list
 
-  get 'api_requests/detail'
+  get 'api_requests/detail/:project_id', to: 'api_requests#detail'
 
   root to: "api_requests#list"
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
