@@ -89,4 +89,5 @@ Rails.application.configure do
   config.osf_auth_site = osf_auth_config["auth_site"]
   config.osf_authorize_url = osf_auth_config["authorize_url"]
   config.osf_token_url = osf_auth_config["token_url"]
+  config.osf_api_base_url = osf_auth_config["api_base_url"]
 end

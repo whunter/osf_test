@@ -43,6 +43,10 @@ class Oauth2Controller < ApplicationController
     )
   end
 
+  def oauth_token
+    @oauth_token = OAuth2::AccessToken.from_hash(get_client, session['oauth_token'])
+  end
+
   def check_logged_in
     redirect_to oauth_auth_url unless session['oauth_token']
   end
