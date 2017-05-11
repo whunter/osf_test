@@ -14,18 +14,18 @@ class ApiRequestsController < Oauth2Controller
   def detail
     node = @oauth_token.get(node_url_from_id(params["project_id"]))
     node_obj = JSON.parse(node.body)
+    
     project_name = node_obj['data']['attributes']['title'].downcase.gsub(" ", "_")
-    begin
-      FileUtils.mkdir(File.join(Rails.root.to_s, 'public', project_name))
-    rescue
-      puts "directory already exists"
-    end
-
+    root_path = File.join(Rails.root.to_s, 'public', project_name)
+    make_dir root_path
+    
     files_link = node_obj['data']['relationships']['files']['links']['related']['href']
     files = @oauth_token.get(files_link)
     files_obj = JSON.parse(files.body)
     files_obj['data'].each do | source |
-      import source['relationships']['files']['links']['related']['href']
+      source_name = source['attributes']['name']
+      source_path = File.join(root_path, source_name)
+      import source['relationships']['files']['links']['related']['href'], source_path
     end
   end
 
@@ -41,10 +41,38 @@ class ApiRequestsController < Oauth2Controller
     File.join(Rails.application.config.osf_api_base_url, "nodes", node_id, "/")  
   end
 
-  def import directory
-    files = @oauth_token.get(directory)
-    raise files.body
+  def import directory_object, path
+    files = @oauth_token.get(directory_object)
+    files_obj = JSON.parse(files.body)
+    if files_obj['links']['meta']['total'] > 0
+      make_dir path
+    
+      files_obj['data'].each do | node |
+        kind = node['attributes']['kind']
+        if kind == 'file'
+          get_file node, directory_object, path
+        elsif kind == 'folder'
+          sub_directory = node['relationships']['files']['links']['related']['href']
+          sub_path = File.join(path, node['attributes']['name'])
+          make_dir sub_path
+          import sub_directory, sub_path
+        end
+      end
+
+    end
   end
 
+  def get_file file_obj, directory, path
+    file = @oauth_token.get(file_obj['links']['download'])
+    File.open(File.join(path, file_obj['attributes']['name']), 'w:ASCII-8BIT') { |new_file| new_file.write(file.body) }
+  end
+
+  def make_dir path
+    begin
+      FileUtils.mkdir(path)
+    rescue
+      puts "Error creating directory. Maybe it already exists"
+    end
+  end
 
 end
