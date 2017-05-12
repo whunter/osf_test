@@ -1,4 +1,6 @@
 class ApiRequestsController < Oauth2Controller
+  require 'fileutils'
+
   helper_method :detail_route
   before_action :get_oauth_token
 
@@ -27,6 +29,26 @@ class ApiRequestsController < Oauth2Controller
       source_path = File.join(root_path, source_name)
       import source['relationships']['files']['links']['related']['href'], source_path
     end
+
+    zip_project root_path, project_name
+    remove_tmp_files project_name
+  end
+
+  def remove_tmp_files dir_name
+    upload_dir = File.join(Rails.root.to_s, 'public')
+    archive_name = File.join(upload_dir, "#{dir_name}.zip")
+    while !File.file? archive_name do
+      sleep 0.01
+    end
+    if File.file? archive_name
+      tmp_dir = File.join(upload_dir, dir_name)
+      FileUtils.rm_rf(tmp_dir)
+    end
+  end
+
+  def zip_project path, name
+    public = File.join(Rails.root.to_s, 'public')
+    `cd "#{public}" &&  zip -r "#{name}.zip" "#{name}"`
   end
 
   def detail_route project_id
