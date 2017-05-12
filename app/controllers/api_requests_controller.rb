@@ -34,6 +34,10 @@ class ApiRequestsController < Oauth2Controller
     remove_tmp_files project_name
   end
 
+  def walk_nodes project_id
+
+  end
+
   def remove_tmp_files dir_name
     upload_dir = File.join(Rails.root.to_s, 'public')
     archive_name = File.join(upload_dir, "#{dir_name}.zip")
