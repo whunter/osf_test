@@ -10,17 +10,41 @@ class ApiRequestsController < Oauth2Controller
     nodes_link = me_obj['data']['relationships']['nodes']['links']['related']['href']
     nodes = @oauth_token.get(nodes_link)
     nodes_obj = JSON.parse(nodes.body)
-    @projects = nodes_obj['data'].map{ | project | { 'id' => project['id'], 'links' => project['links'], 'attributes' => project['attributes'] } } rescue []
+    @projects = nodes_obj['data'].map{ | project |
+      if project['attributes']['category'] == 'project'
+        contributors_link = project['relationships']['contributors']['links']['related']['href']
+        contributors = @oauth_token.get(contributors_link)
+        contributors_obj = JSON.parse(contributors.body)
+      	{ 
+          'id' => project['id'], 
+          'links' => project['links'], 
+          'attributes' => project['attributes'], 
+          'contributors' => contributors_obj['data'].map{| contributor | {
+            'name' => contributor['embeds']['users']['data']['attributes']['full_name'],
+            'creator' => contributor['attributes']['index'] == 0 ? true : false
+          }}
+        }
+      else
+        nil
+      end
+    }
   end
 
   def detail
     node = @oauth_token.get(node_url_from_id(params["project_id"]))
     node_obj = JSON.parse(node.body)
-    
     project_name = node_obj['data']['attributes']['title'].downcase.gsub(" ", "_")
     root_path = File.join(Rails.root.to_s, 'public', project_name)
+
+    walk_nodes node_obj, project_name, root_path   
+ 
+    zip_project root_path, project_name
+    remove_tmp_files project_name
+  end
+
+  def walk_nodes node_obj, project_name, root_path
     make_dir root_path
-    
+
     files_link = node_obj['data']['relationships']['files']['links']['related']['href']
     files = @oauth_token.get(files_link)
     files_obj = JSON.parse(files.body)
@@ -29,13 +53,6 @@ class ApiRequestsController < Oauth2Controller
       source_path = File.join(root_path, source_name)
       import source['relationships']['files']['links']['related']['href'], source_path
     end
-
-    zip_project root_path, project_name
-    remove_tmp_files project_name
-  end
-
-  def walk_nodes project_id
-
   end
 
   def remove_tmp_files dir_name
