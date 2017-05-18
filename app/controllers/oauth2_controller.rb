@@ -1,5 +1,5 @@
 class Oauth2Controller < ApplicationController
-  before_action :check_logged_in
+  # before_action :check_logged_in, except: [:auth]
   before_action :get_client
 
   def index

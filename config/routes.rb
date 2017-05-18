@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   get 'oauth2/index'
 
-  get 'oauth2/auth', :as => :oauth_auth_url
+  get 'oauth2/auth', :as => :oauth_auth
 
   get 'oauth2/token'
 

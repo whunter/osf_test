@@ -42,17 +42,35 @@ class ApiRequestsController < Oauth2Controller
     remove_tmp_files project_name
   end
 
-  def walk_nodes node_obj, project_name, root_path
-    make_dir root_path
+  def walk_nodes node_obj, project_name, current_path
+    make_dir current_path
 
     files_link = node_obj['data']['relationships']['files']['links']['related']['href']
     files = @oauth_token.get(files_link)
     files_obj = JSON.parse(files.body)
     files_obj['data'].each do | source |
       source_name = source['attributes']['name']
-      source_path = File.join(root_path, source_name)
+      source_path = File.join(current_path, source_name)
       import source['relationships']['files']['links']['related']['href'], source_path
     end
+    
+    children_array = get_children node_obj
+    if children_array.respond_to?('each')
+      children_array.each do | child_link |
+        child = @oauth_token.get(child_link)
+        child_obj = JSON.parse(child.body)
+        child_name = child_obj['data']['attributes']['title'].downcase.gsub(" ", "_")
+        child_path = File.join(current_path, child_name)
+        walk_nodes child_obj, project_name, child_path
+      end
+    end
+  end
+
+  def get_children node_obj
+    children_link = node_obj['data']['relationships']['children']['links']['related']['href']
+    children = @oauth_token.get(children_link)
+    children_obj = JSON.parse(children.body)
+    children_obj['data'].map{ | child | child['links']['self'] }
   end
 
   def remove_tmp_files dir_name
