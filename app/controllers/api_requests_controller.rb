@@ -5,16 +5,13 @@ class ApiRequestsController < Oauth2Controller
   before_action :get_oauth_token
 
   def list
-    me = @oauth_token.get('https://api.osf.io/v2/users/me/')
-    me_obj = JSON.parse(me.body)
+    me_obj = osf_get_object('https://api.osf.io/v2/users/me/')
     nodes_link = me_obj['data']['relationships']['nodes']['links']['related']['href']
-    nodes = @oauth_token.get(nodes_link)
-    nodes_obj = JSON.parse(nodes.body)
+    nodes_obj = osf_get_object(nodes_link)
     @projects = nodes_obj['data'].map{ | project |
       if project['attributes']['category'] == 'project'
         contributors_link = project['relationships']['contributors']['links']['related']['href']
-        contributors = @oauth_token.get(contributors_link)
-        contributors_obj = JSON.parse(contributors.body)
+        contributors_obj = osf_get_object(contributors_link)
       	{ 
           'id' => project['id'], 
           'links' => project['links'], 
@@ -31,8 +28,7 @@ class ApiRequestsController < Oauth2Controller
   end
 
   def detail
-    node = @oauth_token.get(node_url_from_id(params["project_id"]))
-    node_obj = JSON.parse(node.body)
+    node_obj = osf_get_object(node_url_from_id(params["project_id"]))
     project_name = node_obj['data']['attributes']['title'].downcase.gsub(" ", "_")
     root_path = File.join(Rails.root.to_s, 'public', project_name)
 
@@ -46,8 +42,7 @@ class ApiRequestsController < Oauth2Controller
     make_dir current_path
 
     files_link = node_obj['data']['relationships']['files']['links']['related']['href']
-    files = @oauth_token.get(files_link)
-    files_obj = JSON.parse(files.body)
+    files_obj = osf_get_object(files_link)
     files_obj['data'].each do | source |
       source_name = source['attributes']['name']
       source_path = File.join(current_path, source_name)
@@ -57,8 +52,7 @@ class ApiRequestsController < Oauth2Controller
     children_array = get_children node_obj
     if children_array.respond_to?('each')
       children_array.each do | child_link |
-        child = @oauth_token.get(child_link)
-        child_obj = JSON.parse(child.body)
+        child_obj = osf_get_object(child_link)
         child_name = child_obj['data']['attributes']['title'].downcase.gsub(" ", "_")
         child_path = File.join(current_path, child_name)
         walk_nodes child_obj, project_name, child_path
@@ -68,8 +62,7 @@ class ApiRequestsController < Oauth2Controller
 
   def get_children node_obj
     children_link = node_obj['data']['relationships']['children']['links']['related']['href']
-    children = @oauth_token.get(children_link)
-    children_obj = JSON.parse(children.body)
+    children_obj = osf_get_object(children_link)
     children_obj['data'].map{ | child | child['links']['self'] }
   end
 
@@ -103,8 +96,7 @@ class ApiRequestsController < Oauth2Controller
   end
 
   def import directory_object, path
-    files = @oauth_token.get(directory_object)
-    files_obj = JSON.parse(files.body)
+    files_obj = osf_get_object(directory_object)
     if files_obj['links']['meta']['total'] > 0
       make_dir path
     
@@ -124,7 +116,7 @@ class ApiRequestsController < Oauth2Controller
   end
 
   def get_file file_obj, directory, path
-    file = @oauth_token.get(file_obj['links']['download'])
+    file = osf_get(file_obj['links']['download'])
     File.open(File.join(path, file_obj['attributes']['name']), 'w:ASCII-8BIT') { |new_file| new_file.write(file.body) }
   end
 
@@ -134,6 +126,20 @@ class ApiRequestsController < Oauth2Controller
     rescue
       puts "Error creating directory. Maybe it already exists"
     end
+  end
+
+  def osf_get url
+    begin
+      response = @oauth_token.get(url)
+    rescue
+      puts "it broke"
+    end
+    response rescue nil
+  end
+
+  def osf_get_object url
+    response = osf_get url
+    JSON.parse(response.body)
   end
 
 end
