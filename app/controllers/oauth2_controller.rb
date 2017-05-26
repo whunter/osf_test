@@ -1,5 +1,4 @@
 class Oauth2Controller < ApplicationController
-  # before_action :check_logged_in, except: [:auth]
   before_action :get_client
 
   def index
@@ -47,8 +46,5 @@ class Oauth2Controller < ApplicationController
     @oauth_token = OAuth2::AccessToken.from_hash(get_client, session['oauth_token'])
   end
 
-  def check_logged_in
-    redirect_to oauth_auth_url unless session['oauth_token']
-  end
 end
 

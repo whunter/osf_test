@@ -2,6 +2,7 @@ class ApiRequestsController < Oauth2Controller
   require 'fileutils'
 
   helper_method :detail_route
+  before_action :check_logged_in, only: [:list, :detail]
   before_action :get_oauth_token
 
   def list
@@ -140,6 +141,10 @@ class ApiRequestsController < Oauth2Controller
   def osf_get_object url
     response = osf_get url
     JSON.parse(response.body)
+  end
+
+  def check_logged_in
+    redirect_to oauth_auth_url unless session['oauth_token']
   end
 
 end
